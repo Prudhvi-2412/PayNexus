@@ -78,6 +78,7 @@ jobs:
     - name: Install Dashboard Dependencies
       run: |
         cd apps/dashboard
+        rm -f package-lock.json
         npm install
 
     - name: Run Dashboard Build
