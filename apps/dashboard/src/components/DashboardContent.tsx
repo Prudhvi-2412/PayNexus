@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, ArrowRightLeft, CheckCircle2, Cpu, ArrowUpRight, BarChart3, ShieldAlert, Sparkles, Server, Zap, RefreshCw } from 'lucide-react';
+import { Plus, ArrowRightLeft, CheckCircle2, ArrowUpRight, Sparkles, Server, Zap } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import MetricCards from './MetricCards';
 import LedgerVisualizer from './LedgerVisualizer';
@@ -452,7 +452,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ platform }) 
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {settlements.map((sett) => (
+                {settlements.map((sett: any) => (
                   <tr key={sett.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="py-4 px-6 font-mono text-xs text-slate-900 font-bold">{sett.id}</td>
                     <td className="py-4 px-4 font-mono text-xs text-slate-500">{sett.payoutReference}</td>
@@ -497,7 +497,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ platform }) 
             </div>
             <RefundsTable 
               refunds={refunds}
-              formatCentsToInr={formatCentsToInr}
+              formatCentsToUsd={formatCentsToInr}
             />
           </div>
         </div>

@@ -12,8 +12,6 @@ interface MetricCardsProps {
 }
 
 export const MetricCards: React.FC<MetricCardsProps> = ({
-  role,
-  settledBalance,
   pendingBalance,
   payments,
   riskAlerts,

@@ -1,4 +1,3 @@
-import React from 'react';
 import { usePaymentPlatform } from './hooks/usePaymentPlatform';
 import Navbar from './components/Navbar';
 import DashboardContent from './components/DashboardContent';

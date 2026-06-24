@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, Shield, Landmark, Sparkles, Send } from 'lucide-react';
+import { Shield, Sparkles, Send } from 'lucide-react';
 
 // --- ORDER CHECKOUT MODAL ---
 interface OrderModalProps {

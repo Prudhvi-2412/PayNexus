@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, ShieldAlert } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 interface AuditLogsTableProps {
   auditLogs: any[];

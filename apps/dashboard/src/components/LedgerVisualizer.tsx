@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, ArrowRight, TrendingUp, Sparkles } from 'lucide-react';
+import { ShieldCheck, TrendingUp, Sparkles } from 'lucide-react';
 
 interface LedgerVisualizerProps {
   pendingBalance: bigint;
@@ -64,7 +64,7 @@ export const LedgerVisualizer: React.FC<LedgerVisualizerProps> = ({
             <span className="text-[10px] font-bold text-primary bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5">DEBIT</span>
           </div>
           <div className="flex items-baseline justify-between">
-            <h4 className="text-2xl font-extrabold text-slate-950">{formatCentsToUsd(gatewayReceivableVal)}</h4>
+            <h4 className="text-2xl font-extrabold text-slate-950">{formatCentsToUsd(BigInt(gatewayReceivableVal))}</h4>
             <span className="text-xs text-secondary font-bold flex items-center gap-0.5">
               <TrendingUp size={12} /> Normal
             </span>
