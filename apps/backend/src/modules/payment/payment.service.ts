@@ -1,4 +1,4 @@
-import { OrderStatus, PaymentStatus, RiskAction, LedgerTransactionType } from '@prisma/client';
+import { OrderStatus, PaymentStatus, RiskAction, LedgerTransactionType, Prisma } from '@prisma/client';
 import prisma from '../../shared/database/prisma';
 import kafkaService from '../../shared/kafka/kafka';
 import fraudService from '../fraud/fraud.service';
@@ -66,7 +66,7 @@ export class PaymentService {
           currency,
           status: OrderStatus.CREATED,
           customerEmail,
-          metadata: metadata ? JSON.stringify(metadata) : null,
+          metadata: metadata ? (metadata as Prisma.InputJsonValue) : Prisma.DbNull,
         },
       });
 
@@ -230,7 +230,7 @@ export class PaymentService {
 
         // Perform fraud detection
         let riskScore = 0;
-        let riskStatus = RiskAction.ALLOW;
+        let riskStatus: RiskAction = RiskAction.ALLOW;
         let rulesTriggered: string[] = [];
 
         const existingAuthPayment = await tx.payment.findFirst({
