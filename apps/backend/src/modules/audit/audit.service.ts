@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../../shared/database/prisma';
 
 export class AuditService {
@@ -31,8 +32,8 @@ export class AuditService {
           action,
           resource,
           resourceId,
-          beforeState: beforeState ? JSON.stringify(beforeState) : null,
-          afterState: afterState ? JSON.stringify(afterState) : null,
+          beforeState: beforeState !== undefined && beforeState !== null ? (beforeState as Prisma.InputJsonValue) : Prisma.DbNull,
+          afterState: afterState !== undefined && afterState !== null ? (afterState as Prisma.InputJsonValue) : Prisma.DbNull,
           ipAddress,
         },
       });

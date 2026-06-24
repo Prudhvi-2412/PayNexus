@@ -76,7 +76,7 @@ class RedisService {
   public async acquireLock(lockKey: string, lockValue: string, ttlMs: number): Promise<boolean> {
     if (!this.isConnected || !this.client) return true; // Fail open to avoid deadlocks
     try {
-      const result = await this.client.set(lockKey, lockValue, 'NX', 'PX', ttlMs);
+      const result = await (this.client as any).set(lockKey, lockValue, 'NX', 'PX', ttlMs);
       return result === 'OK';
     } catch (err) {
       console.error(`Redis Lock acquire error for key ${lockKey}:`, err);
@@ -174,6 +174,45 @@ class RedisService {
     } catch (err) {
       console.error(`Token bucket rate limit execution error:`, err);
       return { allowed: true, remaining: capacity };
+    }
+  }
+
+  /**
+   * Simple fixed-window rate limiter.
+   * limit: Max requests allowed in the window
+   * windowSeconds: Time window size in seconds
+   */
+  public async rateLimit(
+    key: string,
+    limit: number,
+    windowSeconds: number
+  ): Promise<{ allowed: boolean; remaining: number }> {
+    if (!this.isConnected || !this.client) {
+      return { allowed: true, remaining: limit };
+    }
+
+    try {
+      const currentVal = await this.client.get(key);
+      let count = 0;
+
+      if (!currentVal) {
+        // Key doesn't exist, create it with EXPIRE
+        const multi = this.client.multi();
+        multi.incr(key);
+        multi.expire(key, windowSeconds);
+        await multi.exec();
+        count = 1;
+      } else {
+        count = await this.client.incr(key);
+      }
+
+      const allowed = count <= limit;
+      const remaining = Math.max(0, limit - count);
+
+      return { allowed, remaining };
+    } catch (err) {
+      console.error(`Rate limit execution error for key ${key}:`, err);
+      return { allowed: true, remaining: limit };
     }
   }
 
