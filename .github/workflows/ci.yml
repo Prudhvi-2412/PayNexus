@@ -78,7 +78,7 @@ jobs:
     - name: Install Dashboard Dependencies
       run: |
         cd apps/dashboard
-        npm ci
+        npm install
 
     - name: Run Dashboard Build
       run: |
