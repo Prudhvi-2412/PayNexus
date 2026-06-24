@@ -9,7 +9,7 @@ This guide is designed to help engineers, technical leaders, product managers, a
 ## 1. Project Overview
 
 ### Project Name
-**PayNexus** (formerly StripeX)
+**PayNexus**
 
 ### Problem Statement
 Modern digital payment integration layers suffer from:
@@ -47,33 +47,33 @@ PayNexus uses a highly coordinated, event-driven monolith pattern. Below is the 
 flowchart TD
     Client[Merchant Checkout / API Client] -->|1. HTTPS POST /api/orders| ExpressApp[Express Monolith Server]
     
-    subgraph Gatekeeping & Lock Layer (Redis)
+    subgraph Gatekeeping_Lock_Layer ["Gatekeeping & Lock Layer (Redis)"]
         ExpressApp -->|2. Check Key & Rate Limit| TokenBucket[Token Bucket Lua Script]
         TokenBucket -->|3. Check Key Presence| Idempotency[Idempotency Key Engine]
         Idempotency -->|4. Acquire Lock| RedisLock[Redis Distributed Lock]
     end
     
-    subgraph Core Transaction Processing
+    subgraph Core_Transaction_Processing ["Core Transaction Processing"]
         RedisLock -->|5. Evaluate Risk| FraudEngine[Fraud & Risk Engine]
         FraudEngine -->|6. Assign Route| RoutingService[Smart Gateway Router]
         RoutingService -->|7. Exec DB Transaction| DB[Prisma Client / PostgreSQL]
         DB -->|8. Ledger Journal Entry| LedgerService[Double-Entry Ledger]
     end
     
-    subgraph Message Broker & Consumers
+    subgraph Message_Broker_Consumers ["Message Broker & Consumers"]
         LedgerService -->|9. Publish Event| Kafka[Kafka Event Broker]
         Kafka -->|Topic: payment.captured| AnalyticsConsumer[Analytics Consumer]
         Kafka -->|Topic: payment.captured| AuditConsumer[Audit Logs Consumer]
         Kafka -->|Topic: payment.captured| WebhookConsumer[Webhook Delivery Consumer]
     end
     
-    subgraph Backend State Cache & Metrics
+    subgraph Backend_State_Cache_Metrics ["Backend State Cache & Metrics"]
         AnalyticsConsumer -->|Update stats| RedisStats[Redis Cache Metrics]
         AuditConsumer -->|Write state logs| DB
         WebhookConsumer -->|Signed HTTP POST| MerchantWebhook[Merchant Server URL]
     end
     
-    subgraph Real-Time Console Interface
+    subgraph Real_Time_Console_Interface ["Real-Time Console Interface"]
         ReactDashboard[React Glassmorphic Dashboard] -->|Polls metrics| RedisStats
         ReactDashboard -->|Queries logs| ExpressApp
         ReactDashboard -.->|Offline Fallback| BrowserDB[Local Storage Database]

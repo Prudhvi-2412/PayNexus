@@ -23,7 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <TrendingUp size={24} color="#fff" />
         </div>
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px' }}>StripeX</h2>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.5px' }}>PayNexus</h2>
           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>LEDGER & SETTLEMENTS</span>
         </div>
       </div>
