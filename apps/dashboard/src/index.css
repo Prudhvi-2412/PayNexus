@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --color-primary: #22C55E;
+  --color-secondary: #10B981;
+  --color-accent: #14B8A6;
+  --color-brand-bg: #F8FFFA;
+  --color-brand-card: #FFFFFF;
+}
+
+/* Custom Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F0F9F4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C2EAD2;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A3E2BA;
+}
+
+body {
+  background-color: var(--color-brand-bg);
+  font-family: var(--font-sans);
+  color: #0F172A;
+  min-height: 100vh;
+  letter-spacing: -0.015em;
+  overflow-y: scroll;
+}
+
+/* Premium Card hover lifts */
+.fintech-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(34, 197, 94, 0.08);
+  box-shadow: 0 4px 30px -4px rgba(15, 23, 42, 0.02), 0 2px 10px -2px rgba(15, 23, 42, 0.01);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 20px;
+}
+
+.fintech-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(34, 197, 94, 0.25);
+  box-shadow: 0 30px 40px -10px rgba(34, 197, 94, 0.06), 0 10px 20px -8px rgba(15, 23, 42, 0.02);
+}
+
+/* Custom Glassmorphism effect */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(34, 197, 94, 0.08);
+}
+
+/* Status Badge Glows */
+.badge-captured {
+  background: rgba(34, 197, 94, 0.08);
+  color: #15803D;
+  border: 1px solid rgba(34, 197, 94, 0.16);
+}
+
+.badge-pending {
+  background: rgba(245, 158, 11, 0.08);
+  color: #B45309;
+  border: 1px solid rgba(245, 158, 11, 0.16);
+}
+
+.badge-failed {
+  background: rgba(239, 68, 68, 0.08);
+  color: #B91C1C;
+  border: 1px solid rgba(239, 68, 68, 0.16);
+}
+
+.badge-refunded {
+  background: rgba(20, 184, 166, 0.08);
+  color: #0F766E;
+  border: 1px solid rgba(20, 184, 166, 0.16);
+}
+
+/* Floating status pulses */
+.pulse-online {
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  animation: pulse-success 2s infinite;
+}
+
+@keyframes pulse-success {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+/* Subtle Currency Symbol Background Pattern helper */
+.rupee-pattern-bg {
+  background-image: radial-gradient(rgba(34, 197, 94, 0.04) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}

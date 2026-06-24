@@ -1,0 +1,340 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  MERCHANT
+  CUSTOMER
+}
+
+enum MerchantStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum AccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum OrderStatus {
+  CREATED
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+  SETTLED
+}
+
+enum PaymentStatus {
+  CREATED
+  AUTHORIZED
+  CAPTURED
+  FAILED
+}
+
+enum RefundStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum LedgerEntityType {
+  MERCHANT_AVAILABLE
+  MERCHANT_PENDING
+  MERCHANT_SETTLED
+  CUSTOMER_WALLET
+  PLATFORM_REVENUE
+  GATEWAY_RECEIVABLE
+}
+
+enum LedgerEntryType {
+  DEBIT
+  CREDIT
+}
+
+enum LedgerTransactionType {
+  PAYMENT_CAPTURE
+  PAYMENT_FEE
+  REFUND
+  SETTLEMENT_TRANSFER
+  SETTLEMENT_PAYOUT
+  WALLET_ADJUSTMENT
+}
+
+enum SettlementStatus {
+  CREATED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+enum SettlementBatchStatus {
+  OPEN
+  PROCESSING
+  COMPLETED
+}
+
+enum RiskAction {
+  ALLOW
+  REVIEW
+  BLOCK
+}
+
+enum DeliveryStatus {
+  SUCCESS
+  FAILED
+}
+
+model Merchant {
+  id           String         @id @default(uuid())
+  businessName String
+  email        String         @unique
+  passwordHash String
+  role         Role           @default(MERCHANT)
+  status       MerchantStatus @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  accounts    MerchantAccount[]
+  apiKeys     MerchantApiKey[]
+  webhooks    MerchantWebhook[]
+  orders      Order[]
+  payments    Payment[]
+  refunds     Refund[]
+  settlements Settlement[]
+
+  @@map("merchants")
+}
+
+model MerchantAccount {
+  id            String        @id @default(uuid())
+  merchantId    String
+  bankName      String
+  accountNumber String
+  routingNumber String
+  status        AccountStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@map("merchant_accounts")
+}
+
+model MerchantApiKey {
+  id         String   @id @default(uuid())
+  merchantId String
+  prefix     String   @unique
+  keyHash    String   @unique
+  active     Boolean  @default(true)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@map("merchant_api_keys")
+}
+
+model MerchantWebhook {
+  id         String   @id @default(uuid())
+  merchantId String
+  url        String
+  secret     String
+  events     String // Comma-separated events (e.g. "payment.captured,payment.failed")
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  merchant Merchant     @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  logs     WebhookLog[]
+
+  @@map("merchant_webhooks")
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  merchantOrderId String
+  merchantId      String
+  amount          BigInt      // In cents
+  currency        String      @default("USD")
+  status          OrderStatus @default(CREATED)
+  customerEmail   String
+  metadata        Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  merchant Merchant  @relation(fields: [merchantId], references: [id])
+  payments Payment[]
+
+  @@unique([merchantId, merchantOrderId])
+  @@map("orders")
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  orderId          String
+  merchantId       String
+  amount           BigInt        // In cents
+  currency         String        @default("USD")
+  status           PaymentStatus @default(CREATED)
+  method           String        // e.g. CARD, UPI, NETBANKING
+  gatewayReference String?
+  customerIp       String?
+  riskScore        Int?
+  riskStatus       RiskAction?   @default(ALLOW)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  order      Order       @relation(fields: [orderId], references: [id])
+  merchant   Merchant    @relation(fields: [merchantId], references: [id])
+  refunds    Refund[]
+  riskAlerts RiskAlert[]
+
+  @@map("payments")
+}
+
+model Refund {
+  id               String       @id @default(uuid())
+  paymentId        String
+  merchantId       String
+  amount           BigInt       // In cents
+  currency         String       @default("USD")
+  status           RefundStatus @default(PENDING)
+  reason           String?
+  gatewayReference String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  payment  Payment  @relation(fields: [paymentId], references: [id])
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@map("refunds")
+}
+
+model LedgerAccount {
+  id         String           @id @default(uuid())
+  entityId   String           // Merchant ID, Customer ID, or "PLATFORM"
+  entityType LedgerEntityType
+  currency   String           @default("USD")
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  entries LedgerEntry[]
+
+  @@unique([entityId, entityType, currency])
+  @@map("ledger_accounts")
+}
+
+model LedgerEntry {
+  id              String                @id @default(uuid())
+  ledgerAccountId String
+  entryType       LedgerEntryType
+  amount          BigInt                // Positive amount in cents
+  transactionId   String                // paymentId, refundId, or settlementId
+  transactionType LedgerTransactionType
+  description     String?
+  createdAt       DateTime              @default(now())
+
+  ledgerAccount LedgerAccount @relation(fields: [ledgerAccountId], references: [id])
+
+  @@index([transactionId])
+  @@map("ledger_entries")
+}
+
+model SettlementBatch {
+  id        String                @id @default(uuid())
+  status    SettlementBatchStatus @default(OPEN)
+  settledAt DateTime?
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  settlements Settlement[]
+
+  @@map("settlement_batches")
+}
+
+model Settlement {
+  id                String           @id @default(uuid())
+  merchantId        String
+  settlementBatchId String
+  grossAmount       BigInt           // In cents
+  feeAmount         BigInt           // In cents
+  netAmount         BigInt           // In cents (grossAmount - feeAmount)
+  status            SettlementStatus @default(CREATED)
+  payoutReference   String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  merchant        Merchant        @relation(fields: [merchantId], references: [id])
+  settlementBatch SettlementBatch @relation(fields: [settlementBatchId], references: [id])
+
+  @@map("settlements")
+}
+
+model IdempotencyKey {
+  id              String   @id @default(uuid())
+  key             String
+  merchantId      String
+  requestPath     String
+  requestBodyHash String
+  responseStatus  Int
+  responseBody    String   // JSON string of response
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@unique([key, merchantId])
+  @@map("idempotency_keys")
+}
+
+model WebhookLog {
+  id             String         @id @default(uuid())
+  webhookId      String
+  eventType      String
+  payload        String
+  responseStatus Int?
+  responseBody   String?
+  deliveryStatus DeliveryStatus
+  retryCount     Int            @default(0)
+  nextRetryAt    DateTime?
+  createdAt      DateTime       @default(now())
+
+  webhook MerchantWebhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@map("webhook_logs")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  actorRole  String   // SUPER_ADMIN, MERCHANT, SYSTEM
+  action     String
+  resource   String
+  resourceId String?
+  beforeState Json?
+  afterState  Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model RiskAlert {
+  id             String     @id @default(uuid())
+  paymentId      String
+  ruleTriggered  String
+  riskScore      Int
+  actionTaken    RiskAction
+  createdAt      DateTime   @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  @@map("risk_alerts")
+}
